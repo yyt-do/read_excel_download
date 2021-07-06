@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>上传文件</title>
+    <script type="text/javascript" src="./xlsx.full.min.js"></script>
+  </head>
+  <style>
+    #btn {
+      margin: 10px 0;
+    }
+    table {
+      width: 500px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      text-align: center;
+    }
+
+    td,
+    th {
+      border: 1px solid #333;
+    }
+
+    thead tr {
+      height: 40px;
+      background-color: #ccc;
+    }
+    td:nth-child(1) {
+      display: none;
+    }
+    h2{
+      text-align: center;
+    }
+  </style>
+  <body>
+    文件：<br />
+    <input type="file" id="file" /><br />
+    <button id="btn">下载文件</button>
+    <div>
+      <h2>无效链接列表</h2>
+      <table cellspacing="0">
+        <thead>
+          <tr>
+            <th style="display: none">URL</th>
+            <th>title_one</th>
+            <th>title_two</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </body>
+  <script src="./jszip.min.js"></script>
+  <script src="./FileSaver.min.js"></script>
+  <script src="./jquery-3.1.1.min.js"></script>
+  <script>
+    //首先监听input框的变动，选中一个新的文件会触发change事件
+    var result = [];
+    var NewImg_url = [];
+    var fail_img_url = [];
+    document.querySelector("#file").addEventListener("change", function () {
+      //获取到选中的文件
+      var file = document.querySelector("#file").files[0];
+      var type = file.name.split(".");
+      if (type[type.length - 1] !== "xlsx" && type[type.length - 1] !== "xls") {
+        alert("只能选择excel文件导入");
+        return false;
+      }
+      const reader = new FileReader();
+      reader.readAsBinaryString(file);
+      reader.onload = (e) => {
+        const data = e.target.result;
+        const zzexcel = window.XLS.read(data, {
+          type: "binary",
+        });
+        for (let i = 0; i < zzexcel.SheetNames.length; i++) {
+          const newData = window.XLS.utils.sheet_to_json(
+            zzexcel.Sheets[zzexcel.SheetNames[i]]
+          );
+          result.push(...newData);
+        }
+        console.log("result", result);
+        // 返回有效地址
+        result.forEach((item) => {
+          console.log(item);
+          checkImgExists(item.url)
+            .then(() => {
+              //success callback
+              // console.log("有效链接");
+              NewImg_url.push(item);
+              console.log(NewImg_url);
+            })
+            .catch(() => {
+              //fail callback
+              // console.log("无效链接");
+              fail_img_url.push(item);
+              console.log(fail_img_url);
+              // 获取元素
+              var tbody = document.querySelector("tbody");
+
+              for (var i = 0; i < fail_img_url.length; i++) {
+                //创建行tr
+                var tr = document.createElement("tr");
+                //将新创建的行tr添加给tbody
+                tbody.appendChild(tr);
+                // 3、内层for循环，创建每一行中的所有单元格td
+                for (var k in fail_img_url[i]) {
+                  // 创建td元素
+                  var td = document.createElement("td");
+                  // 将每个对象中的属性值传给td
+                  td.innerHTML = fail_img_url[i][k];
+                  //给tr添加td子元素
+                  tr.appendChild(td);
+                }
+              }
+            });
+        });
+      };
+    });
+    // 判断图片地址是否有效
+    function checkImgExists(imgurl) {
+      return new Promise(function (resolve, reject) {
+        var ImgObj = new Image();
+        ImgObj.src = imgurl;
+        ImgObj.onload = function (res) {
+          resolve(res);
+        };
+        ImgObj.onerror = function (err) {
+          reject(err);
+        };
+      });
+    }
+
+    function zip(result) {
+      var zip = new JSZip();
+      // 创建images文件夹
+      var imgFolder = zip.folder("images");
+      let arr = result;
+      // console.log(12345);
+      // console.log(arr);
+      let flag = 0; //  判断加载了几张图片的标识
+      for (let i = 0; i < arr.length; i++) {
+        getBase64(arr[i].url, arr[i].title_one, arr[i].title_two).then(
+          function (base64) {
+            base64 = base64.split("base64,")[1];
+            imgFolder.file(i + ".png", base64, { base64: true });
+            if (flag === arr.length - 1) {
+              zip.generateAsync({ type: "blob" }).then((blob) => {
+                saveAs(blob, "example.zip");
+              });
+            }
+            flag++;
+          },
+          function (err) {
+            console.log(err); //打印异常信息
+          }
+        );
+      }
+
+      function getBase64(img, title_one, title_two) {
+        var id_one = title_one;
+        var id_two = title_two;
+        // console.log(title_one);
+        // console.log(id_two);
+        function getBase64Image(img, title_one, title_two, width, height) {
+          //width、height调用时传入具体像素值，控制大小 ,不传则默认图像大小
+          var canvas = document.createElement("canvas");
+          canvas.width = width ? width : img.width;
+          canvas.height = height ? height : img.height;
+
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          ctx.font = "20px";
+          var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+          gradient.addColorStop("0", "magenta");
+          gradient.addColorStop("0.5", "blue");
+          gradient.addColorStop("1.0", "red");
+          // Fill with gradient
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, canvas.height / 2.6, canvas.width, 18);
+          ctx.fillStyle = "#000";
+          ctx.textAlign = "center";
+          ctx.fillText(title_one, canvas.width / 2, canvas.height / 2.3);
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, canvas.height / 1.8, canvas.width, 18);
+          ctx.fillStyle = "#000";
+          ctx.textAlign = "center";
+          ctx.fillText(title_two, canvas.width / 2, canvas.height / 1.6);
+          var dataURL = canvas.toDataURL();
+          return dataURL;
+        }
+        var image = new Image();
+        image.crossOrigin = "*";
+        image.src = img;
+        // console.log("地址是" + img);
+        var deferred = $.Deferred();
+        if (img) {
+          image.onload = function () {
+            deferred.resolve(getBase64Image(image, id_one, id_two)); //将base64传给done上传处理
+          };
+          return deferred.promise(); //问题要让onload完成后再return sessionStorage['imgTest']
+        }
+      }
+    }
+    let tn = document.getElementById("btn");
+
+    tn.addEventListener("click", function (e) {
+      e.stopPropagation(); //取消事件冒泡
+
+      //  downloadIamge(result[0].url,123)
+      zip(NewImg_url);
+    });
+  </script>
+</html>
