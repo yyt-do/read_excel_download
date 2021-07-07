@@ -118,7 +118,6 @@
     width: 10vw;
   }
 </style>
-
 <body>
   <div class="down_wrapper">
     <div style="position: relative;">
@@ -129,9 +128,7 @@
       <button id="btn">下载文件</button>
       <button id="creat-table">生成无效链接列表</button></button>
   <span class="choose_text">未选择任何文件</span>
-
     </div>
-
   </div>
   <div>
     <h2>无效链接列表</h2>
@@ -158,30 +155,23 @@
   var fail_img_url = [];
   var data 
   document.querySelector("#file").addEventListener("change", function () {
-  
     cleanTableData()
     //获取到选中的文件
     var file = document.querySelector("#file").files[0];
-    // console.log(file);
     var a_content = document.querySelector(".choose_text");
     a_content.innerText = "已选择"+file.name
-    // console.log(file.innerHTML );
     var type = file.name.split(".");
     if (type[type.length - 1] !== "xlsx" && type[type.length - 1] !== "xls") {
       alert("只能选择excel文件导入");
       return false;
     }
     const reader = new FileReader();
-    // console.log(reader);
     reader.readAsBinaryString(file);
     reader.onload = (e) => {
-      // console.log(e);
       data = e.target.result;
-      //  console.log(data);
       const zzexcel = window.XLS.read(data, {
         type: "binary",
       });
-      // console.log(zzexcel);
       for (let i = 0; i < zzexcel.SheetNames.length; i++) {
         const newData = window.XLS.utils.sheet_to_json(
           zzexcel.Sheets[zzexcel.SheetNames[i]]
@@ -191,7 +181,6 @@
       console.log("result", result);
       // 返回有效地址
       result.forEach((item) => {
-        // console.log(item);
         checkImgExists(item.url)
           .then(() => {
             //success callback
@@ -226,7 +215,6 @@
       };
     });
   }
-
   function zip(result) {
     var zip = new JSZip();
     // 创建images文件夹
@@ -250,7 +238,6 @@
         }
       );
     }
-
     function getBase64(img, title_one, title_two) {
       var id_one = title_one;
       var id_two = title_two;
@@ -259,15 +246,9 @@
         var canvas = document.createElement("canvas");
         canvas.width = width ? width : img.width;
         canvas.height = height ? height : img.height;
-
         var ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         ctx.font = "20px";
-        // var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-        // gradient.addColorStop("0", "magenta");
-        // gradient.addColorStop("0.5", "blue");
-        // gradient.addColorStop("1.0", "red");
-        // Fill with gradient
         ctx.fillStyle = "#fff";
         ctx.fillRect(25, canvas.height / 2.6, canvas.width*3/4, 18);
         ctx.fillStyle = "#000";
@@ -284,7 +265,6 @@
       var image = new Image();
       image.crossOrigin = "*";
       image.src = img;
-      // console.log("地址是" + img);
       var deferred = $.Deferred();
       if (img) {
         image.onload = function () {
@@ -295,12 +275,9 @@
     }
   }
   let tn = document.getElementById("btn");
-
   tn.addEventListener("click", function (e) {
     e.stopPropagation(); //取消事件冒泡
-    //  downloadIamge(result[0].url,123)
     zip(NewImg_url);
-    
   });
   let button = document.getElementById("creat-table");
   button.addEventListener("click", function (e) {
