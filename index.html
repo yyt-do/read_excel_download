@@ -113,14 +113,15 @@
   }
   .choose_text{
     position: absolute;
-    left: 58%;
-    top: 33%;
+    left: 96%;
+    top: 42%;
+    width: 10vw;
   }
 </style>
 
 <body>
   <div class="down_wrapper">
-    <div>
+    <div style="position: relative;">
       <h1>读取excel文件:</h1>
       <span class="file">
         <input type="file" name="" id="file">选择文件
@@ -155,27 +156,32 @@
   var result = [];
   var NewImg_url = [];
   var fail_img_url = [];
+  var data 
   document.querySelector("#file").addEventListener("change", function () {
   
     cleanTableData()
-    console.log(fail_img_url);
     //获取到选中的文件
     var file = document.querySelector("#file").files[0];
+    // console.log(file);
     var a_content = document.querySelector(".choose_text");
     a_content.innerText = "已选择"+file.name
-    console.log(file.innerHTML );
+    // console.log(file.innerHTML );
     var type = file.name.split(".");
     if (type[type.length - 1] !== "xlsx" && type[type.length - 1] !== "xls") {
       alert("只能选择excel文件导入");
       return false;
     }
     const reader = new FileReader();
+    // console.log(reader);
     reader.readAsBinaryString(file);
     reader.onload = (e) => {
-      const data = e.target.result;
+      // console.log(e);
+      data = e.target.result;
+      //  console.log(data);
       const zzexcel = window.XLS.read(data, {
         type: "binary",
       });
+      // console.log(zzexcel);
       for (let i = 0; i < zzexcel.SheetNames.length; i++) {
         const newData = window.XLS.utils.sheet_to_json(
           zzexcel.Sheets[zzexcel.SheetNames[i]]
@@ -193,16 +199,14 @@
           })
           .catch(() => {
             //fail callback
-            console.log(fail_img_url);
             fail_img_url.push(item);
-
           });
       });
     };
   });
   function cleanTableData() {
     fail_img_url = []
-    result = []
+    result.splice(0,result.length);
     var table = document.getElementById("table");
     var trs = table.getElementsByTagName("tr");
     for(var i = trs.length - 1; i > 0; i--) {
@@ -259,21 +263,21 @@
         var ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         ctx.font = "20px";
-        var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-        gradient.addColorStop("0", "magenta");
-        gradient.addColorStop("0.5", "blue");
-        gradient.addColorStop("1.0", "red");
+        // var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        // gradient.addColorStop("0", "magenta");
+        // gradient.addColorStop("0.5", "blue");
+        // gradient.addColorStop("1.0", "red");
         // Fill with gradient
         ctx.fillStyle = "#fff";
-        ctx.fillRect(0, canvas.height / 2.6, canvas.width, 18);
+        ctx.fillRect(25, canvas.height / 2.6, canvas.width*3/4, 18);
         ctx.fillStyle = "#000";
         ctx.textAlign = "center";
-        ctx.fillText(title_one, canvas.width / 2, canvas.height / 2.3);
+        ctx.fillText(title_one, canvas.width/2, canvas.height / 2.3);
         ctx.fillStyle = "#fff";
-        ctx.fillRect(0, canvas.height / 1.8, canvas.width, 18);
+        ctx.fillRect(25, canvas.height / 1.8, canvas.width*3/4, 18);
         ctx.fillStyle = "#000";
         ctx.textAlign = "center";
-        ctx.fillText(title_two, canvas.width / 2, canvas.height / 1.6);
+        ctx.fillText(title_two, canvas.width/2, canvas.height / 1.6);
         var dataURL = canvas.toDataURL();
         return dataURL;
       }
